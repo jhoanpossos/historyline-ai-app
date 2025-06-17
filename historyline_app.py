@@ -941,89 +941,15 @@ def process_single_exchange_for_hierarchy(user_message_content, assistant_respon
 
 
 # ==============================================================================
-# 4. INITIAL CHAT LOADING FROM FILE (EXAMPLE)
+# 4. INITIAL CHAT LOADING FROM FILE (EXAMPLE) - REMOVED
 # ==============================================================================
+# The entire block for loading chat_ia.txt and the example chat has been removed.
+# st.session_state.initial_load_done will now only be set the first time the app runs,
+# ensuring a clean start with "Nuevo Chat 1".
+
 if "initial_load_done" not in st.session_state:
-    try:
-        with open("chat_ia.txt", 'r', encoding='utf-8') as f: content = f.read()
-        
-        parts = re.split(r'(Dijiste:|ChatGPT dijo:)', content)
-        messages_from_file = []
-        if len(parts) > 1:
-            for i in range(1, len(parts), 2):
-                if i + 1 < len(parts) and parts[i+1].strip():
-                    role = "user" if parts[i].strip() == "Dijiste:" else "assistant"
-                    messages_from_file.append({"role": role, "content": parts[i+1].strip()})
-        
-        chat_file_key = "Chat de Archivo (ia)"
-        st.session_state.chats[chat_file_key] = {
-            "messages": messages_from_file,
-            "analysis_state": get_initial_analysis_state(),
-            "replies_data": [] # Initialize for file chats as well
-        }
-        
-        temp_current_chat_key = st.session_state.current_chat_key
-        st.session_state.current_chat_key = chat_file_key
-
-        print(f"[{time.strftime('%H:%M:%S')}] {T['generating_initial_analysis']} '{chat_file_key}' (simulating history load)...")
-        
-        current_analysis_state = st.session_state.chats[chat_file_key]["analysis_state"]
-        current_analysis_state["main_topic_memory"] = {}
-        current_analysis_state["last_n_emb"] = None
-        current_analysis_state["last_nn_emb"] = None
-        current_analysis_state["last_nnn_emb"] = None
-        current_analysis_state["current_n_id"] = 0
-        current_analysis_state["current_nn_id"] = 0
-        current_analysis_state["current_nnn_id"] = 0
-        current_analysis_state["hierarchy"] = []
-        current_analysis_state["topic_titles"] = {}
-        
-        for i in range(0, len(messages_from_file), 2):
-            user_msg_content = messages_from_file[i]['content']
-            assistant_msg_content = messages_from_file[i+1]['content'] if (i+1) < len(messages_from_file) else ""
-            process_single_exchange_for_hierarchy(user_msg_content, assistant_msg_content, i // 2)
-        
-        print(f"[{time.strftime('%H:%M:%S')}] {T['initial_analysis_completed']} '{chat_file_key}' completed.")
-        
-        st.session_state.current_chat_key = temp_current_chat_key
-
-        if not st.session_state.chats["Nuevo Chat 1"]["messages"]:
-            st.session_state.current_chat_key = chat_file_key
-            
-    except FileNotFoundError:
-        print(f"[{time.strftime('%H:%M:%S')}] {T['no_chat_file_found']}")
-        example_messages = [
-            {"role": "user", "content": "¿Me podrías explicar qué es la computación cuántica de una manera sencilla?"},
-            {"role": "assistant", "content": "Claro. Imagina que las computadoras normales usan bits que pueden ser 0 o 1. Las computadoras cuánticas usan 'qubits' que pueden ser 0, 1 o una combinación de ambos al mismo tiempo. Esto se llama superposición. También tienen 'entrelazamiento', donde dos qubits están conectados sin importar la distancia, y 'interferencia' para explorar muchas posibilidades a la vez. Todo esto les permite resolver problemas que las computadoras clásicas no pueden, como descubrir nuevos medicamentos o materiales, o romper cifrados."},
-            {"role": "user", "content": "Aquí hay un mensaje de VQA para que HistoryLine lo procese:", "type": "vqa", "image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a8/Quantum_computer_IBM_Q_System_One.jpg/640px-Quantum_computer_IBM_Q_System_One.jpg", "question": "¿Qué tipo de dispositivo se muestra en esta imagen y cuál es su propósito principal?"},
-            {"role": "assistant", "content": "La imagen muestra un dispositivo de computación cuántica, como el IBM Q System One. Su propósito principal es realizar cálculos complejos y resolver problemas que están más allá de las capacidades de las computadoras clásicas, utilizando principios de la mecánica cuántica como la superposición y el entrelazamiento."},
-            {"role": "user", "content": "¿Y qué tan cerca estamos de tener computadoras cuánticas que realmente puedan hacer esto a gran escala?"},
-            {"role": "assistant", "content": "Estamos en una fase de desarrollo muy activa. Ya existen computadoras cuánticas funcionales, pero la mayoría son 'NISQ' (Noisy Intermediate-Scale Quantum) devices. Son pequeñas, propensas a errores y aún no superan a las supercomputadoras clásicas en todas las tareas. Pero la investigación avanza rápidamente, con empresas como IBM, Google y varias universidades invirtiendo fuertemente. Se espera que en la próxima década veamos avances significativos hacia computadoras cuánticas tolerantes a fallos que puedan abordar problemas comerciales y científicos realmente complejos."},
-            {"role": "user", "content": "Entiendo. ¿Y qué papel juega la criptografía en todo esto? ¿Las computadoras cuánticas la pondrán en peligro?"},
-            {"role": "assistant", "content": "Esa es una excelente pregunta y un área crítica de investigación. Algunos algoritmos de cifrado actuales, como RSA, que se basan en la dificultad de factorizar números grandes, podrían ser vulnerables a algoritmos cuánticos como el algoritmo de Shor. Por eso, se está desarrollando la 'criptografía post-cuántica' (PQC), que son algoritmos de cifrado diseñados para ser seguros incluso frente a computadoras cuánticas potente. Muchas organizaciones ya están investigando y preparándose para migrar a estos nuevos estándares de seguridad. Es un campo en constante evolución."},
-            {"role": "user", "content": "Entonces, ¿la computación cuántica no solo es una promesa de avance sino también un desafío para la seguridad digital?"},
-            {"role": "assistant", "content": "Exactamente. Es una moneda de dos caras. Por un lado, abre puertas a soluciones revolucionarias en ciencia, medicina y optimización. Por otro, presenta un desafío significativo para la seguridad de la información tal como la conocemos hoy. La clave está en la investigación y el desarrollo proactivo de medidas de seguridad que puedan coexistir con estas nuevas capacidades. La colaboración entre gobiernos, la academia y la industria es fundamental para asegurar una transición segura a la era post-cuántica."}
-        ]
-        chat_example_key = "Chat de Ejemplo (cuántico)"
-        st.session_state.chats[chat_example_key] = {
-            "messages": [],
-            "analysis_state": get_initial_analysis_state(),
-            "replies_data": [] # Initialize for the example chat
-        }
-
-        temp_current_chat_key = st.session_state.current_chat_key
-        st.session_state.current_chat_key = chat_example_key
-
-        for i in range(0, len(example_messages), 2):
-            user_msg = example_messages[i]['content']
-            assistant_msg = example_messages[i+1]['content'] if (i+1) < len(example_messages) else ""
-            process_single_exchange_for_hierarchy(user_msg, assistant_msg, i // 2)
-        print(f"[{time.strftime('%H:%M:%S')}] {T['initial_analysis_completed']} '{chat_example_key}' completed.")
-
-        st.session_state.current_chat_key = temp_current_chat_key
-
-        if not st.session_state.chats["Nuevo Chat 1"]["messages"]:
-            st.session_state.current_chat_key = chat_example_key
+    # This block will now only initialize the default "Nuevo Chat 1"
+    # as the file loading and example chat creation logic is removed.
     st.session_state.initial_load_done = True
 
 
