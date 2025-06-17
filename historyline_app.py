@@ -19,7 +19,6 @@ from nltk.corpus import stopwords
 from sentence_transformers import SentenceTransformer, util
 import google.generativeai as genai
 from dotenv import load_dotenv # Import load_dotenv
-# REMOVED: import streamlit.components.v1 as components
 import requests
 from PIL import Image
 import io
@@ -27,6 +26,7 @@ import json
 import urllib3
 import pandas as pd
 import datetime
+from typing import Union # Added Union import
 
 # ==============================================================================
 # Seguridad: Deshabilitar advertencias de SSL para desarrollo.
@@ -198,9 +198,6 @@ def load_models_and_config():
         "INITIAL_RETRY_DELAY": 2,
         "MAX_RETRY_ATTEMPTS": 5,
         "RETRY_MULTIPLIER": 2,
-        # TII API Key - NOW HARDCODED AS PER USER REQUEST
-        # WARNING: For production, it is strongly recommended to use environment variables or a secret manager.
-        "TII_API_KEY": "cqYq8cz-o0AObgOJNcosfFaRmgd5sLQH",
         "TII_BASE_URL": "https://crowdlabel.tii.ae/api/2025.2/tasks/pick", # Endpoint corrected as per Sultan
         "REQUEST_TIMEOUT": 10, # Timeout for HTTP requests
         # New parameters for contextualization
@@ -220,8 +217,9 @@ def load_models_and_config():
     config["embedding_model"] = SentenceTransformer('all-MiniLM-L6-v2')
 
     # --- Gemini client configuration (from Streamlit Secrets or environment variables) ---
-    # Prioriza Streamlit Secrets, luego variables de entorno
-    google_api_key = st.secrets.get("GOOGLE_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+    # Prioriza variables de entorno, luego Streamlit Secrets
+    google_api_key = os.environ.get("GOOGLE_API_KEY") or st.secrets.get("GOOGLE_API_KEY")
+    config["TII_API_KEY"] = os.environ.get("TII_API_KEY") or st.secrets.get("TII_API_KEY") # Prioritize env var for TII_API_KEY
 
     if google_api_key:
         genai.configure(api_key=google_api_key)
@@ -524,7 +522,7 @@ def get_contextual_prompt_prefix(current_chat_key: str) -> str:
     return final_context_string if final_context_string else ""
 
 
-def get_gemini_response(prompt_content: str | dict, referenced_message_content: str | dict | None = None, current_chat_key: str = None):
+def get_gemini_response(prompt_content: Union[str, dict], referenced_message_content: Union[str, dict, None] = None, current_chat_key: str = None):
     """
     Gets a response from Gemini for a text prompt (or VQA).
     Implements exponential backoff for Gemini calls.
