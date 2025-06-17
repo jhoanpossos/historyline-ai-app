@@ -19,7 +19,7 @@ from nltk.corpus import stopwords
 from sentence_transformers import SentenceTransformer, util
 import google.generativeai as genai
 from dotenv import load_dotenv # Import load_dotenv
-import streamlit.components.v1 as components
+# REMOVED: import streamlit.components.v1 as components
 import requests
 from PIL import Image
 import io
@@ -71,7 +71,7 @@ LANG_DICT = {
         "topic_unknown_title": "Título Desconocido",
         "revisiting_topic": "(Retomando Tópico",
         "pending_title": "Título Pendiente",
-        "prompt_summary_prefix": "  -> \"",
+        "prompt_summary_prefix": "   -> \"",
         "subtopic_prefix": "  Nuevo Subtópico",
         "detail_prefix": "    -> \"",
         "error_gemini_api": "Lo siento, tuve un problema al contactar la API de Gemini.",
@@ -132,7 +132,7 @@ LANG_DICT = {
         "topic_unknown_title": "Unknown Title",
         "revisiting_topic": "(Revisiting Topic",
         "pending_title": "Pending Title",
-        "prompt_summary_prefix": "  -> \"",
+        "prompt_summary_prefix": "   -> \"",
         "subtopic_prefix": "  New Subtopic",
         "detail_prefix": "    -> \"",
         "error_gemini_api": "Sorry, I had a problem contacting the Gemini API.",
@@ -200,7 +200,7 @@ def load_models_and_config():
         "RETRY_MULTIPLIER": 2,
         # TII API Key - NOW HARDCODED AS PER USER REQUEST
         # WARNING: For production, it is strongly recommended to use environment variables or a secret manager.
-        "TII_API_KEY": "cqYq8cz-o0AObgOJgcosfFaRmgd5sLQH",
+        "TII_API_KEY": "cqYq8cz-o0AObgOJNcosfFaRmgd5sLQH",
         "TII_BASE_URL": "https://crowdlabel.tii.ae/api/2025.2/tasks/pick", # Endpoint corrected as per Sultan
         "REQUEST_TIMEOUT": 10, # Timeout for HTTP requests
         # New parameters for contextualization
@@ -389,7 +389,7 @@ def log_vqa_analysis(task_id: str, question: str, gemini_answer: str, current_ch
             else:
                 snippet = text_content
             simplified_tag["title_or_snippet"] = snippet[:60] + "..." if len(snippet) > 60 else snippet
-        
+            
         hierarchical_tags.append(simplified_tag)
 
     log_entry = {
@@ -660,7 +660,7 @@ def fetch_tii_vqa_task():
             print(f"[{time.strftime('%H:%M:%S')}] ⚠️ {T['error_request_exception']} (attempt {retries + 1}): {e}")
         except json.JSONDecodeError:
             print(f"[{time.strftime('%H:%M:%S')}] ⚠️ {T['error_api_generic']} (attempt {retries + 1}).")
-        
+            
         retries += 1
         if retries < CONFIG['MAX_RETRY_ATTEMPTS']:
             print(f"[{time.strftime('%H:%M:%S')}] Waiting {delay:.2f} seconds before retrying...")
@@ -1067,7 +1067,7 @@ with left_col:
 
 
         if st.button(display_chat_name, use_container_width=True, type=("primary" if st.session_state.current_chat_key == chat_key else "secondary")):
-            st.session_session.current_chat_key = chat_key
+            st.session_state.current_chat_key = chat_key
             st.session_state.scroll_to_index = None
             st.rerun()
     if st.button(T["new_chat_button"], use_container_width=True, key="new_chat_button"):
@@ -1253,7 +1253,7 @@ with right_col:
 # --- JavaScript Component for Scroll ---
 if st.session_state.scroll_to_index is not None:
     index_to_scroll = st.session_state.pop('scroll_to_index')
-    components.html(
+    st.markdown(
         f"""
         <script>
             var el = window.parent.document.getElementById('msg-{index_to_scroll}');
@@ -1262,5 +1262,5 @@ if st.session_state.scroll_to_index is not None:
             }}
         </script>
         """,
-        height=0,
+        unsafe_allow_html=True, # ¡CRUCIAL! Permite la inyección de HTML/JS
     )
